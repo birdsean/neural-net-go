@@ -38,3 +38,31 @@ func Test_sumAlongColumn(t *testing.T) {
 		})
 	}
 }
+
+func Test_randPopulateMatrices(t *testing.T) {
+	type args struct {
+		matrices []*mat.Dense
+	}
+	m1 := mat.NewDense(1, 1, nil)
+	m2 := mat.NewDense(2, 2, nil)
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "populates multiple matrices",
+			args: args{[]*mat.Dense{m1, m2}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if m1.Norm(1) != 0 || m2.Norm(1) != 0 {
+				t.Errorf("randPopulatematrices test unexpectedly started with a filled matrix. m1 is empty: %v, m2 is empty: %v", m1.Norm(1) != 0, m2.Norm(1) != 0)
+			}
+			randPopulateMatrices(tt.args.matrices...)
+			if m1.Norm(1) == 0 || m2.Norm(1) == 0 {
+				t.Errorf("randPopulatematrices returned an unchanged matrix. m1 is empty: %v, m2 is empty: %v", m1.Norm(1) == 0, m2.Norm(1) == 0)
+			}
+		})
+	}
+}
