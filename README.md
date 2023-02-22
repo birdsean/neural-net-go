@@ -29,4 +29,4 @@ There's some potential directions it might be fun to take this repo:
 
 ## Contributions
 
-...are welcome! If you see that I got something wrong, have some helpful comments, would like to try the exercise yourself, or want to add some enhancments to the library, feel free to drop a PR.
+...are welcome! If you see that I got something wrong, have some helpful comments, would like to try the exercise yourself and find a better way of doing it, or want to add some enhancements to the library, feel free to drop a PR.
