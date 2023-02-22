@@ -17,15 +17,15 @@ This command will train and test the network, and then print the accuracy of the
 The training and test data comes from the apparently oft-referenced [iris dataset](https://archive.ics.uci.edu/ml/datasets/iris).
 
 There's some potential directions it might be fun to take this repo:
-[] Generalize the data input code so different datasets can be used
-[] Support other activation functions other than sigmoid
-[] Make it much more memory efficient
-[] Use the system's GPU for the matrix calculations
-[] Add a diagram to the README that explains how the system works
-[] Make it into a CLI
-[] Build a more sophisticated neural net
-[] Add unit tests
-[] Save and load the matrices from previous trainings
+- [ ] Generalize the data input code so different datasets can be used
+- [ ] Support other activation functions other than sigmoid
+- [ ] Make it much more memory efficient
+- [ ] Use the system's GPU for the matrix calculations
+- [ ] Add a diagram to the README that explains how the system works
+- [ ] Make it into a CLI
+- [ ] Build a more sophisticated neural net
+- [ ] Add unit tests
+- [ ] Save and load the matrices from previous trainings
 
 ## Contributions
 
