@@ -49,3 +49,36 @@ func TestNeuralNet_adjustBias(t *testing.T) {
 		})
 	}
 }
+
+func TestNeuralNet_adjustWeights(t *testing.T) {
+	type args struct {
+		originalWeights *mat.Dense
+		activations     *mat.Dense
+		derivative      *mat.Dense
+	}
+	tests := []struct {
+		name string
+		args args
+		want *mat.Dense
+	}{
+		{
+			name: "adjust weights",
+			args: args{
+				originalWeights: mat.NewDense(2, 3, []float64{1, 1, 1, 1, 1, 1}),
+				activations:     mat.NewDense(5, 2, []float64{2, 2, 2, 2, 2, 2, 2, 2, 2, 2}),
+				derivative:      mat.NewDense(5, 3, []float64{3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3}),
+			},
+			want: mat.NewDense(2, 3, []float64{31, 31, 31, 31, 31, 31}),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			nn := basicNN()
+
+			nn.adjustWeights(tt.args.originalWeights, tt.args.activations, tt.args.derivative)
+			if !reflect.DeepEqual(tt.args.originalWeights, tt.want) {
+				t.Errorf("adjustWeights=%v, want %v", tt.args.originalWeights, tt.want)
+			}
+		})
+	}
+}
