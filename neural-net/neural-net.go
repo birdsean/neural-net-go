@@ -13,15 +13,15 @@ import (
 type NeuralNet struct {
 	config        NeuralNetConfig
 	hiddenWeights *mat.Dense
-	biasHidden    *mat.Dense
-	weightsOutput *mat.Dense
-	biasOutput    *mat.Dense
+	hiddenBias    *mat.Dense
+	outputWeights *mat.Dense
+	outputBias    *mat.Dense
 }
 
 type NeuralNetConfig struct {
 	CountInputNeurons  int
 	CountOutputNeurons int
-	CountHiddenNeurons int
+	CountHiddenNeurons int // TODO: change this to layer sizes config object to support multiple layers
 	CountEpochs        int
 	LearningRate       float64
 }
@@ -32,15 +32,15 @@ func New(config NeuralNetConfig) *NeuralNet {
 
 func (nn *NeuralNet) Train(inputVars, dependentVars *mat.Dense) error {
 	nn.hiddenWeights = mat.NewDense(nn.config.CountInputNeurons, nn.config.CountHiddenNeurons, nil)
-	nn.biasHidden = mat.NewDense(1, nn.config.CountHiddenNeurons, nil)
-	nn.weightsOutput = mat.NewDense(nn.config.CountHiddenNeurons, nn.config.CountOutputNeurons, nil)
-	nn.biasOutput = mat.NewDense(1, nn.config.CountOutputNeurons, nil)
+	nn.hiddenBias = mat.NewDense(1, nn.config.CountHiddenNeurons, nil)
+	nn.outputWeights = mat.NewDense(nn.config.CountHiddenNeurons, nn.config.CountOutputNeurons, nil)
+	nn.outputBias = mat.NewDense(1, nn.config.CountOutputNeurons, nil)
 
-	randPopulateMatrices(nn.hiddenWeights, nn.biasHidden, nn.weightsOutput, nn.biasOutput)
+	randPopulateMatrices(nn.hiddenWeights, nn.hiddenBias, nn.outputWeights, nn.outputBias)
 
 	output := new(mat.Dense)
 
-	err := nn.backpropagate(inputVars, dependentVars, nn.hiddenWeights, nn.biasHidden, nn.weightsOutput, nn.biasOutput, output)
+	err := nn.backpropagate(inputVars, dependentVars, nn.hiddenWeights, nn.hiddenBias, nn.outputWeights, nn.outputBias, output)
 	if err != nil {
 		return err
 	}
@@ -48,15 +48,15 @@ func (nn *NeuralNet) Train(inputVars, dependentVars *mat.Dense) error {
 }
 
 func (nn *NeuralNet) Predict(x *mat.Dense) (*mat.Dense, error) {
-	if nn.hiddenWeights == nil || nn.weightsOutput == nil {
+	if nn.hiddenWeights == nil || nn.outputWeights == nil {
 		return nil, errors.New("the supplied weights are empty")
 	}
-	if nn.biasHidden == nil || nn.biasOutput == nil {
+	if nn.hiddenBias == nil || nn.outputBias == nil {
 		return nil, errors.New("the supplied biases are empty")
 	}
 
 	output := new(mat.Dense)
-	feedForward(x, nn.hiddenWeights, nn.biasHidden, nn.weightsOutput, nn.biasOutput, output)
+	feedForward(x, nn.hiddenWeights, nn.hiddenBias, nn.outputWeights, nn.outputBias, output)
 	return output, nil
 }
 

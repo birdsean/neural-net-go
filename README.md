@@ -17,6 +17,7 @@ This command will train and test the network, and then print the accuracy of the
 The training and test data comes from the apparently oft-referenced [iris dataset](https://archive.ics.uci.edu/ml/datasets/iris).
 
 There's some potential directions it might be fun to take this repo:
+- [ ] Support multiple hidden layers
 - [ ] Add a diagram to the README that explains how the system works
 - [ ] Add unit tests
 - [ ] Support other activation functions other than sigmoid
