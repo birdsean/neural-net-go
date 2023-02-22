@@ -33,6 +33,7 @@ func New(config NeuralNetConfig) *NeuralNet {
 func (nn *NeuralNet) Train(inputVars, dependentVars *mat.Dense) error {
 	nn.hiddenWeights = mat.NewDense(nn.config.CountInputNeurons, nn.config.CountHiddenNeurons, nil)
 	nn.hiddenBias = mat.NewDense(1, nn.config.CountHiddenNeurons, nil)
+	// any other weight-layer matrices need to have rows equal to cols of previous matrix and rows equal to cols of next matrix
 	nn.outputWeights = mat.NewDense(nn.config.CountHiddenNeurons, nn.config.CountOutputNeurons, nil)
 	nn.outputBias = mat.NewDense(1, nn.config.CountOutputNeurons, nil)
 
