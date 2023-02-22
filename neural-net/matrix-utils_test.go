@@ -66,3 +66,28 @@ func Test_randPopulateMatrices(t *testing.T) {
 		})
 	}
 }
+
+func Test_calcDerivatives(t *testing.T) {
+	type args struct {
+		outputSignals *mat.Dense
+		errorSignals  *mat.Dense
+	}
+	tests := []struct {
+		name string
+		args args
+		want *mat.Dense
+	}{
+		{
+			name: "calculates derivates between two matrices",
+			args: args{outputSignals: mat.NewDense(2, 2, []float64{0, 0, 0, 0}), errorSignals: mat.NewDense(2, 2, []float64{0.5, 0.5, 1, 0.5})},
+			want: mat.NewDense(2, 2, []float64{0.125, 0.125, 0.25, 0.125}),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := calcDerivatives(tt.args.outputSignals, tt.args.errorSignals); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("calcDerivatives() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
