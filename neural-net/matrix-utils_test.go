@@ -91,3 +91,27 @@ func Test_calcDerivatives(t *testing.T) {
 		})
 	}
 }
+
+func Test_calcTangentSlopes(t *testing.T) {
+	type args struct {
+		outputSignals *mat.Dense
+	}
+	tests := []struct {
+		name string
+		args args
+		want *mat.Dense
+	}{
+		{
+			name: "calculates tan slopes of matrix",
+			args: args{outputSignals: mat.NewDense(2, 2, []float64{0, 1, 2, 4})},
+			want: mat.NewDense(2, 2, []float64{0.25, 0.19661193324148185, 0.10499358540350662, 0.017662706213291107}),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := calcTangentSlopes(tt.args.outputSignals); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("calcTangentSlopes() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
