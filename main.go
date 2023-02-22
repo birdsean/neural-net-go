@@ -76,9 +76,7 @@ func main() {
 	}
 
 	network := neuralnet.New(config)
-	if err := network.Train(inputs, labels); err != nil {
-		log.Fatal(err)
-	}
+	network.Train(inputs, labels)
 
 	testInputs, testLabels := readFlowerDataFile("data/test.csv")
 	predictions, err := network.Predict(testInputs)
