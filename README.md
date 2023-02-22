@@ -1,5 +1,7 @@
 # Simple Neural Net in Go
 
+[![Tests](https://github.com/birdsean/neural-net-go/actions/workflows/test.yaml/badge.svg?branch=main)](https://github.com/birdsean/neural-net-go/actions/workflows/test.yaml)
+
 This code implements a neural network from scratch. It [comes from](https://github.com/dwhitena/gophernet) a walk-through written by [@dwhitena](https://github.com/dwhitena) called "[Building a neural network from scratch in Go](https://datadan.io/blog/neural-net-with-go)". 
 
 After reading some articles about neural nets, including [this article](https://writings.stephenwolfram.com/2023/02/what-is-chatgpt-doing-and-why-does-it-work/) that discusses the mechanics ChatGPT by Stephen Wolfram, I still felt like I had to hand wave away big parts of how neural networks work. This repository is an attempt to pop the hood and get deeper understanding of the systems. And it was really helpful!
