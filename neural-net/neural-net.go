@@ -107,20 +107,20 @@ func (nn *NeuralNet) backpropagate(inputVars, dependentVars, hiddenWeights, bias
 	return nil
 }
 
-func feedForward(inputVars, hiddenWeights, biasHidden, weightsOutput, biasOutputt, output *mat.Dense) *mat.Dense {
-	hiddenLayerInput := new(mat.Dense)
-	hiddenLayerInput.Mul(inputVars, hiddenWeights)
-	hiddenLayerInput.Apply(func(i, j int, v float64) float64 { return v + biasHidden.At(0, j) }, hiddenLayerInput)
+func feedForward(inputVars, hiddenWeights, biasHidden, weightsOutput, biasOutput, output *mat.Dense) *mat.Dense {
+	summingJunction := new(mat.Dense)
+	summingJunction.Mul(inputVars, hiddenWeights)
+	summingJunction.Apply(func(i, j int, v float64) float64 { return v + biasHidden.At(0, j) }, summingJunction)
 
-	hiddenLayerActivations := new(mat.Dense)
+	nonLinearActivations := new(mat.Dense)
 	applySigmoid := func(_, _ int, v float64) float64 { return sigmoid(v) }
-	hiddenLayerActivations.Apply(applySigmoid, hiddenLayerInput)
+	nonLinearActivations.Apply(applySigmoid, summingJunction)
 
 	outputLayerInput := new(mat.Dense)
-	outputLayerInput.Mul(hiddenLayerActivations, weightsOutput)
-	outputLayerInput.Apply(func(i, j int, v float64) float64 { return v + biasOutputt.At(0, j) }, outputLayerInput)
+	outputLayerInput.Mul(nonLinearActivations, weightsOutput)
+	outputLayerInput.Apply(func(i, j int, v float64) float64 { return v + biasOutput.At(0, j) }, outputLayerInput)
 	output.Apply(applySigmoid, outputLayerInput)
-	return hiddenLayerActivations
+	return nonLinearActivations
 }
 
 func (nn *NeuralNet) adjustParams(original, activations, derivative *mat.Dense) {
