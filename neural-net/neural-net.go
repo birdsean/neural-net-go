@@ -13,15 +13,15 @@ import (
 type NeuralNet struct {
 	config        NeuralNetConfig
 	hiddenWeights *mat.Dense
-	biasHidden    *mat.Dense
-	weightsOutput *mat.Dense
-	biasOutput    *mat.Dense
+	hiddenBias    *mat.Dense
+	outputWeights *mat.Dense
+	outputBias    *mat.Dense
 }
 
 type NeuralNetConfig struct {
 	CountInputNeurons  int
 	CountOutputNeurons int
-	CountHiddenNeurons int
+	CountHiddenNeurons int // TODO: change this to layer sizes config object to support multiple layers
 	CountEpochs        int
 	LearningRate       float64
 }
@@ -30,17 +30,18 @@ func New(config NeuralNetConfig) *NeuralNet {
 	return &NeuralNet{config: config}
 }
 
-func (nn *NeuralNet) Train(independentVars, dependentVars *mat.Dense) error {
+func (nn *NeuralNet) Train(inputVars, desiredOutputs *mat.Dense) error {
 	nn.hiddenWeights = mat.NewDense(nn.config.CountInputNeurons, nn.config.CountHiddenNeurons, nil)
-	nn.biasHidden = mat.NewDense(1, nn.config.CountHiddenNeurons, nil)
-	nn.weightsOutput = mat.NewDense(nn.config.CountHiddenNeurons, nn.config.CountOutputNeurons, nil)
-	nn.biasOutput = mat.NewDense(1, nn.config.CountOutputNeurons, nil)
+	nn.hiddenBias = mat.NewDense(1, nn.config.CountHiddenNeurons, nil)
+	// any other weight-layer matrices need to have rows equal to cols of previous matrix and rows equal to cols of next matrix
+	nn.outputWeights = mat.NewDense(nn.config.CountHiddenNeurons, nn.config.CountOutputNeurons, nil)
+	nn.outputBias = mat.NewDense(1, nn.config.CountOutputNeurons, nil)
 
-	randPopulateMatrices(nn.hiddenWeights, nn.biasHidden, nn.weightsOutput, nn.biasOutput)
+	randPopulateMatrices(nn.hiddenWeights, nn.hiddenBias, nn.outputWeights, nn.outputBias)
 
 	output := new(mat.Dense)
 
-	err := nn.backpropagate(independentVars, dependentVars, nn.hiddenWeights, nn.biasHidden, nn.weightsOutput, nn.biasOutput, output)
+	err := nn.backpropagate(inputVars, desiredOutputs, nn.hiddenWeights, nn.hiddenBias, nn.outputWeights, nn.outputBias, output)
 	if err != nil {
 		return err
 	}
@@ -48,15 +49,15 @@ func (nn *NeuralNet) Train(independentVars, dependentVars *mat.Dense) error {
 }
 
 func (nn *NeuralNet) Predict(x *mat.Dense) (*mat.Dense, error) {
-	if nn.hiddenWeights == nil || nn.weightsOutput == nil {
+	if nn.hiddenWeights == nil || nn.outputWeights == nil {
 		return nil, errors.New("the supplied weights are empty")
 	}
-	if nn.biasHidden == nil || nn.biasOutput == nil {
+	if nn.hiddenBias == nil || nn.outputBias == nil {
 		return nil, errors.New("the supplied biases are empty")
 	}
 
 	output := new(mat.Dense)
-	feedForward(x, nn.hiddenWeights, nn.biasHidden, nn.weightsOutput, nn.biasOutput, output)
+	feedForward(x, nn.hiddenWeights, nn.hiddenBias, nn.outputWeights, nn.outputBias, output)
 	return output, nil
 }
 
@@ -68,37 +69,29 @@ func sigmoidPrime(x float64) float64 {
 	return sigmoid(x) * (1.0 - sigmoid(x))
 }
 
-func (nn *NeuralNet) backpropagate(independentVars, dependentVars, hiddenWeights, biasHidden, weightsOutput, biasOutput, output *mat.Dense) error {
+func (nn *NeuralNet) backpropagate(inputVars, desiredOutputs, hiddenWeights, biasHidden, weightsOutput, biasOutput, output *mat.Dense) error {
 	for i := 0; i < nn.config.CountEpochs; i++ {
 
 		// feed forward
-		hiddenLayerActivations := feedForward(independentVars, hiddenWeights, biasHidden, weightsOutput, biasOutput, output)
+		hiddenLayerActivations := feedForward(inputVars, hiddenWeights, biasHidden, weightsOutput, biasOutput, output)
 
 		// backpropogate
 		networkError := new(mat.Dense)
-		networkError.Sub(dependentVars, output)
+		networkError.Sub(desiredOutputs, output)
+		derivativeOutput := calcDerivatives(output, networkError)
 
-		slopeOutputLayer := new(mat.Dense)
-		applySigmoidPrime := func(_, _ int, v float64) float64 { return sigmoidPrime(v) }
-		slopeOutputLayer.Apply(applySigmoidPrime, output)
-		slopeHiddenLayer := new(mat.Dense)
-		slopeHiddenLayer.Apply(applySigmoidPrime, hiddenLayerActivations)
-
-		derivativeOutput := new(mat.Dense)
-		derivativeOutput.MulElem(networkError, slopeOutputLayer)
 		errorAtHiddenLayer := new(mat.Dense)
 		errorAtHiddenLayer.Mul(derivativeOutput, weightsOutput.T())
+		derivativeHiddenLayer := calcDerivatives(hiddenLayerActivations, errorAtHiddenLayer)
 
-		derivativeHiddenLayer := new(mat.Dense)
-		derivativeHiddenLayer.MulElem(errorAtHiddenLayer, slopeHiddenLayer)
-
-		// adjust params
-		nn.adjustParams(weightsOutput, hiddenLayerActivations, derivativeOutput)
+		// adjust weights
+		nn.adjustWeights(weightsOutput, hiddenLayerActivations, derivativeOutput)
 		err := nn.adjustBias(biasOutput, derivativeOutput)
 		if err != nil {
 			return err
 		}
-		nn.adjustParams(hiddenWeights, independentVars, derivativeHiddenLayer)
+
+		nn.adjustWeights(hiddenWeights, inputVars, derivativeHiddenLayer)
 		hiddenErr := nn.adjustBias(biasHidden, derivativeHiddenLayer)
 		if hiddenErr != nil {
 			return hiddenErr
@@ -107,27 +100,41 @@ func (nn *NeuralNet) backpropagate(independentVars, dependentVars, hiddenWeights
 	return nil
 }
 
-func feedForward(independentVars, hiddenWeights, biasHidden, weightsOutput, biasOutputt, output *mat.Dense) *mat.Dense {
-	hiddenLayerInput := new(mat.Dense)
-	hiddenLayerInput.Mul(independentVars, hiddenWeights)
-	hiddenLayerInput.Apply(func(i, j int, v float64) float64 { return v + biasHidden.At(0, j) }, hiddenLayerInput)
-
-	hiddenLayerActivations := new(mat.Dense)
-	applySigmoid := func(_, _ int, v float64) float64 { return sigmoid(v) }
-	hiddenLayerActivations.Apply(applySigmoid, hiddenLayerInput)
-
-	outputLayerInput := new(mat.Dense)
-	outputLayerInput.Mul(hiddenLayerActivations, weightsOutput)
-	outputLayerInput.Apply(func(i, j int, v float64) float64 { return v + biasOutputt.At(0, j) }, outputLayerInput)
-	output.Apply(applySigmoid, outputLayerInput)
-	return hiddenLayerActivations
+func calcDerivatives(outputSignals, errorSignals *mat.Dense) *mat.Dense {
+	outputSlopes := calcTangentSlopes(outputSignals)
+	derivatives := new(mat.Dense)
+	derivatives.MulElem(errorSignals, outputSlopes)
+	return derivatives
 }
 
-func (nn *NeuralNet) adjustParams(original, activations, derivative *mat.Dense) {
+func calcTangentSlopes(outputSignals *mat.Dense) *mat.Dense {
+	slopes := new(mat.Dense)
+	applySigmoidPrime := func(_, _ int, v float64) float64 { return sigmoidPrime(v) }
+	slopes.Apply(applySigmoidPrime, outputSignals)
+	return slopes
+}
+
+func feedForward(inputVars, hiddenWeights, biasHidden, weightsOutput, biasOutput, output *mat.Dense) *mat.Dense {
+	summingJunction := new(mat.Dense)
+	summingJunction.Mul(inputVars, hiddenWeights)
+	summingJunction.Apply(func(i, j int, v float64) float64 { return v + biasHidden.At(0, j) }, summingJunction)
+
+	nonLinearActivations := new(mat.Dense)
+	applySigmoid := func(_, _ int, v float64) float64 { return sigmoid(v) }
+	nonLinearActivations.Apply(applySigmoid, summingJunction)
+
+	outputLayerInput := new(mat.Dense)
+	outputLayerInput.Mul(nonLinearActivations, weightsOutput)
+	outputLayerInput.Apply(func(i, j int, v float64) float64 { return v + biasOutput.At(0, j) }, outputLayerInput)
+	output.Apply(applySigmoid, outputLayerInput)
+	return nonLinearActivations
+}
+
+func (nn *NeuralNet) adjustWeights(originalWeights, activations, derivative *mat.Dense) {
 	adjustedOutput := new(mat.Dense)
 	adjustedOutput.Mul(activations.T(), derivative)
 	adjustedOutput.Scale(nn.config.LearningRate, adjustedOutput)
-	original.Add(original, adjustedOutput)
+	originalWeights.Add(originalWeights, adjustedOutput)
 }
 
 func (nn *NeuralNet) adjustBias(original, derivative *mat.Dense) error {
