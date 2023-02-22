@@ -1,6 +1,6 @@
 # Simple Neural Net in Go
 
-This code implements a neural network from scratch. It was [heavily inspired](https://github.com/dwhitena/gophernet) by a walk-through written by [@dwhitena](https://github.com/dwhitena) called "[Building a neural network from scratch in Go](https://datadan.io/blog/neural-net-with-go)". 
+This code implements a neural network from scratch. It [comes from](https://github.com/dwhitena/gophernet) a walk-through written by [@dwhitena](https://github.com/dwhitena) called "[Building a neural network from scratch in Go](https://datadan.io/blog/neural-net-with-go)". 
 
 After reading some articles about neural nets, including [this article](https://writings.stephenwolfram.com/2023/02/what-is-chatgpt-doing-and-why-does-it-work/) that discusses the mechanics ChatGPT by Stephen Wolfram, I still felt like I had to hand wave away big parts of how neural networks work. This repository is an attempt to pop the hood and get deeper understanding of the systems. And it was really helpful!
 
@@ -29,4 +29,4 @@ There's some potential directions it might be fun to take this repo:
 
 ## Contributions
 
-...are welcome! If you see that I got something wrong, have some helpful comments, would like to try the exercise yourself, or want to add some enhancments to the library, feel free to drop a PR.
+...are welcome! If you see that I got something wrong, have some helpful comments, would like to try the exercise yourself and find a better way of doing it, or want to add some enhancements to the library, feel free to drop a PR.
