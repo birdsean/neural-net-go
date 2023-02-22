@@ -30,7 +30,7 @@ func New(config NeuralNetConfig) *NeuralNet {
 	return &NeuralNet{config: config}
 }
 
-func (nn *NeuralNet) Train(independentVars, dependentVars *mat.Dense) error {
+func (nn *NeuralNet) Train(inputVars, dependentVars *mat.Dense) error {
 	nn.hiddenWeights = mat.NewDense(nn.config.CountInputNeurons, nn.config.CountHiddenNeurons, nil)
 	nn.biasHidden = mat.NewDense(1, nn.config.CountHiddenNeurons, nil)
 	nn.weightsOutput = mat.NewDense(nn.config.CountHiddenNeurons, nn.config.CountOutputNeurons, nil)
@@ -40,7 +40,7 @@ func (nn *NeuralNet) Train(independentVars, dependentVars *mat.Dense) error {
 
 	output := new(mat.Dense)
 
-	err := nn.backpropagate(independentVars, dependentVars, nn.hiddenWeights, nn.biasHidden, nn.weightsOutput, nn.biasOutput, output)
+	err := nn.backpropagate(inputVars, dependentVars, nn.hiddenWeights, nn.biasHidden, nn.weightsOutput, nn.biasOutput, output)
 	if err != nil {
 		return err
 	}
@@ -68,11 +68,11 @@ func sigmoidPrime(x float64) float64 {
 	return sigmoid(x) * (1.0 - sigmoid(x))
 }
 
-func (nn *NeuralNet) backpropagate(independentVars, dependentVars, hiddenWeights, biasHidden, weightsOutput, biasOutput, output *mat.Dense) error {
+func (nn *NeuralNet) backpropagate(inputVars, dependentVars, hiddenWeights, biasHidden, weightsOutput, biasOutput, output *mat.Dense) error {
 	for i := 0; i < nn.config.CountEpochs; i++ {
 
 		// feed forward
-		hiddenLayerActivations := feedForward(independentVars, hiddenWeights, biasHidden, weightsOutput, biasOutput, output)
+		hiddenLayerActivations := feedForward(inputVars, hiddenWeights, biasHidden, weightsOutput, biasOutput, output)
 
 		// backpropogate
 		networkError := new(mat.Dense)
@@ -98,7 +98,7 @@ func (nn *NeuralNet) backpropagate(independentVars, dependentVars, hiddenWeights
 		if err != nil {
 			return err
 		}
-		nn.adjustParams(hiddenWeights, independentVars, derivativeHiddenLayer)
+		nn.adjustParams(hiddenWeights, inputVars, derivativeHiddenLayer)
 		hiddenErr := nn.adjustBias(biasHidden, derivativeHiddenLayer)
 		if hiddenErr != nil {
 			return hiddenErr
@@ -107,9 +107,9 @@ func (nn *NeuralNet) backpropagate(independentVars, dependentVars, hiddenWeights
 	return nil
 }
 
-func feedForward(independentVars, hiddenWeights, biasHidden, weightsOutput, biasOutputt, output *mat.Dense) *mat.Dense {
+func feedForward(inputVars, hiddenWeights, biasHidden, weightsOutput, biasOutputt, output *mat.Dense) *mat.Dense {
 	hiddenLayerInput := new(mat.Dense)
-	hiddenLayerInput.Mul(independentVars, hiddenWeights)
+	hiddenLayerInput.Mul(inputVars, hiddenWeights)
 	hiddenLayerInput.Apply(func(i, j int, v float64) float64 { return v + biasHidden.At(0, j) }, hiddenLayerInput)
 
 	hiddenLayerActivations := new(mat.Dense)
