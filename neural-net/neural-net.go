@@ -100,17 +100,17 @@ func (nn *NeuralNet) backpropagate(inputVars, desiredOutputs, hiddenWeights, bia
 	return nil
 }
 
-func calcDerivatives(nodes, errorSignals *mat.Dense) *mat.Dense {
-	outputSlopes := calcTangentSlopes(nodes)
+func calcDerivatives(outputSignals, errorSignals *mat.Dense) *mat.Dense {
+	outputSlopes := calcTangentSlopes(outputSignals)
 	derivatives := new(mat.Dense)
 	derivatives.MulElem(errorSignals, outputSlopes)
 	return derivatives
 }
 
-func calcTangentSlopes(nodes *mat.Dense) *mat.Dense {
+func calcTangentSlopes(outputSignals *mat.Dense) *mat.Dense {
 	slopes := new(mat.Dense)
 	applySigmoidPrime := func(_, _ int, v float64) float64 { return sigmoidPrime(v) }
-	slopes.Apply(applySigmoidPrime, nodes)
+	slopes.Apply(applySigmoidPrime, outputSignals)
 	return slopes
 }
 
@@ -130,11 +130,11 @@ func feedForward(inputVars, hiddenWeights, biasHidden, weightsOutput, biasOutput
 	return nonLinearActivations
 }
 
-func (nn *NeuralNet) adjustWeights(original, activations, derivative *mat.Dense) {
+func (nn *NeuralNet) adjustWeights(originalWeights, activations, derivative *mat.Dense) {
 	adjustedOutput := new(mat.Dense)
 	adjustedOutput.Mul(activations.T(), derivative)
 	adjustedOutput.Scale(nn.config.LearningRate, adjustedOutput)
-	original.Add(original, adjustedOutput)
+	originalWeights.Add(originalWeights, adjustedOutput)
 }
 
 func (nn *NeuralNet) adjustBias(original, derivative *mat.Dense) error {
