@@ -1,6 +1,6 @@
 # Simple Neural Net in Go
 
-[![Tests](https://github.com/birdsean/neural-net-go/actions/workflows/test.yaml/badge.svg?branch=main)](https://github.com/birdsean/neural-net-go/actions/workflows/test.yaml)
+[![Tests](https://github.com/birdsean/neural-net-go/actions/workflows/go.yml/badge.svg)](https://github.com/birdsean/neural-net-go/actions/workflows/go.yml)
 
 This code implements a neural network from scratch. It [comes from](https://github.com/dwhitena/gophernet) a walk-through written by [@dwhitena](https://github.com/dwhitena) called "[Building a neural network from scratch in Go](https://datadan.io/blog/neural-net-with-go)". 
 
