@@ -4,7 +4,7 @@ This code implements a neural network from scratch. It [comes from](https://gith
 
 After reading some articles about neural nets, including [this article](https://writings.stephenwolfram.com/2023/02/what-is-chatgpt-doing-and-why-does-it-work/) that discusses the mechanics ChatGPT by Stephen Wolfram, I still felt like I had to hand wave away big parts of how neural networks work. This repository is an attempt to pop the hood and get deeper understanding of the systems. And it was really helpful!
 
-If you want to learn the archtecture, training process, and prediction process well, I'd recommend the excercise of writing a neural net from scratch. What this excercise didn't give me was a practical mathematical understanding of neural nets. Walking through the code while reading [this walkthrough](https://home.agh.edu.pl/~vlsi/AI/backp_t_en/backprop.html) helped me understand the math better.
+If you want to learn the archtecture, training process, and prediction process well, I'd recommend the excercise of writing a neural net from scratch. What this excercise didn't give me was a practical mathematical understanding of neural nets. Walking through the code while reading [this walkthrough](https://home.agh.edu.pl/~vlsi/AI/backp_t_en/backprop.html) helped me understand the math better. (Except I didn't remember how derivatives worked so I'll come update the README if I find any applicable resources on that.)
 
 ## Running
 
