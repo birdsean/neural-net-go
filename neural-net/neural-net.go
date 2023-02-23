@@ -29,14 +29,16 @@ func New(config NeuralNetConfig) *NeuralNet {
 func (nn *NeuralNet) Train(inputVars, desiredOutputs *mat.Dense) {
 	prevColCount := nn.config.CountInputNeurons
 	for i := 0; i < len(nn.config.HiddenLayers); i++ {
-		nn.hiddenWeights = append(nn.hiddenWeights, mat.NewDense(prevColCount, nn.config.HiddenLayers[i], nil))
-		nn.hiddenBias = append(nn.hiddenBias, mat.NewDense(1, nn.config.HiddenLayers[i], nil))
+		edges := mat.NewDense(prevColCount, nn.config.HiddenLayers[i], nil)
+		bias := mat.NewDense(1, nn.config.HiddenLayers[i], nil)
+		randPopulateMatrices(edges, bias)
+		nn.hiddenWeights = append(nn.hiddenWeights, edges)
+		nn.hiddenBias = append(nn.hiddenBias, bias)
 		prevColCount = nn.config.HiddenLayers[i]
 	}
 	nn.outputWeights = mat.NewDense(prevColCount, nn.config.CountOutputNeurons, nil)
 	nn.outputBias = mat.NewDense(1, nn.config.CountOutputNeurons, nil)
-
-	randPopulateMatrices(nn.hiddenWeights[0], nn.hiddenBias[0], nn.outputWeights, nn.outputBias)
+	randPopulateMatrices(nn.outputWeights, nn.outputBias)
 
 	output := new(mat.Dense)
 	nn.backpropagate(inputVars, desiredOutputs, output)
