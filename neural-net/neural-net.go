@@ -8,8 +8,8 @@ import (
 
 type NeuralNet struct {
 	config        NeuralNetConfig
-	hiddenWeights *mat.Dense
-	hiddenBias    *mat.Dense
+	hiddenWeights []*mat.Dense
+	hiddenBias    []*mat.Dense
 	outputWeights *mat.Dense
 	outputBias    *mat.Dense
 }
@@ -17,7 +17,7 @@ type NeuralNet struct {
 type NeuralNetConfig struct {
 	CountInputNeurons  int
 	CountOutputNeurons int
-	CountHiddenNeurons int // TODO: change this to layer sizes config object to support multiple layers
+	HiddenLayers       []int
 	CountEpochs        int
 	LearningRate       float64
 }
@@ -27,13 +27,18 @@ func New(config NeuralNetConfig) *NeuralNet {
 }
 
 func (nn *NeuralNet) Train(inputVars, desiredOutputs *mat.Dense) {
-	nn.hiddenWeights = mat.NewDense(nn.config.CountInputNeurons, nn.config.CountHiddenNeurons, nil)
-	nn.hiddenBias = mat.NewDense(1, nn.config.CountHiddenNeurons, nil)
-	// any other weight-layer matrices need to have rows equal to cols of previous matrix and rows equal to cols of next matrix
-	nn.outputWeights = mat.NewDense(nn.config.CountHiddenNeurons, nn.config.CountOutputNeurons, nil)
+	prevColCount := nn.config.CountInputNeurons
+	for i := 0; i < len(nn.config.HiddenLayers); i++ {
+		edges := mat.NewDense(prevColCount, nn.config.HiddenLayers[i], nil)
+		bias := mat.NewDense(1, nn.config.HiddenLayers[i], nil)
+		randPopulateMatrices(edges, bias)
+		nn.hiddenWeights = append(nn.hiddenWeights, edges)
+		nn.hiddenBias = append(nn.hiddenBias, bias)
+		prevColCount = nn.config.HiddenLayers[i]
+	}
+	nn.outputWeights = mat.NewDense(prevColCount, nn.config.CountOutputNeurons, nil)
 	nn.outputBias = mat.NewDense(1, nn.config.CountOutputNeurons, nil)
-
-	randPopulateMatrices(nn.hiddenWeights, nn.hiddenBias, nn.outputWeights, nn.outputBias)
+	randPopulateMatrices(nn.outputWeights, nn.outputBias)
 
 	output := new(mat.Dense)
 	nn.backpropagate(inputVars, desiredOutputs, output)
@@ -60,35 +65,48 @@ func (nn *NeuralNet) backpropagate(inputVars, desiredOutputs, output *mat.Dense)
 		// backpropogate
 		networkError := new(mat.Dense)
 		networkError.Sub(desiredOutputs, output)
-		derivativeOutput := calcDerivatives(output, networkError)
 
 		errorAtHiddenLayer := new(mat.Dense)
-		errorAtHiddenLayer.Mul(derivativeOutput, nn.outputWeights.T())
-		derivativeHiddenLayer := calcDerivatives(hiddenLayerActivations, errorAtHiddenLayer)
+		previousWeights := nn.outputWeights
+		previousBias := nn.outputBias
+		previousDerivatives := calcDerivatives(output, networkError)
+		for j := len(nn.hiddenWeights) - 1; j >= 0; j-- {
+			errorAtHiddenLayer.Mul(previousDerivatives, previousWeights.T())
+			nn.adjustWeights(previousWeights, hiddenLayerActivations[j], previousDerivatives)
+			nn.adjustBias(previousBias, previousDerivatives)
+			previousWeights = nn.hiddenWeights[j]
+			previousBias = nn.hiddenBias[j]
+			previousDerivatives = calcDerivatives(hiddenLayerActivations[j], errorAtHiddenLayer)
+			errorAtHiddenLayer.Reset()
+		}
 
-		// adjust weights
-		nn.adjustWeights(nn.outputWeights, hiddenLayerActivations, derivativeOutput)
-		nn.adjustBias(nn.outputBias, derivativeOutput)
-
-		nn.adjustWeights(nn.hiddenWeights, inputVars, derivativeHiddenLayer)
-		nn.adjustBias(nn.hiddenBias, derivativeHiddenLayer)
+		nn.adjustWeights(previousWeights, inputVars, previousDerivatives)
+		nn.adjustBias(previousBias, previousDerivatives)
 	}
 }
 
-func (nn *NeuralNet) feedForward(inputVars, output *mat.Dense) *mat.Dense {
-	summingJunction := new(mat.Dense)
-	summingJunction.Mul(inputVars, nn.hiddenWeights)
-	summingJunction.Apply(func(i, j int, v float64) float64 { return v + nn.hiddenBias.At(0, j) }, summingJunction)
-
-	nonLinearActivations := new(mat.Dense)
+func (nn *NeuralNet) feedForward(inputVars, output *mat.Dense) []*mat.Dense {
 	applySigmoid := func(_, _ int, v float64) float64 { return sigmoid(v) }
-	nonLinearActivations.Apply(applySigmoid, summingJunction)
+	summingJunction := new(mat.Dense)
+	previousActivations := inputVars
+	activations := []*mat.Dense{}
+	for idx := 0; idx < len(nn.hiddenWeights); idx++ {
+		summingJunction.Mul(previousActivations, nn.hiddenWeights[idx])
+		summingJunction.Apply(func(i, j int, v float64) float64 { return v + nn.hiddenBias[idx].At(0, j) }, summingJunction)
+
+		nonLinearActivations := new(mat.Dense)
+		nonLinearActivations.Apply(applySigmoid, summingJunction)
+		activations = append(activations, nonLinearActivations)
+
+		previousActivations = nonLinearActivations
+		summingJunction.Reset()
+	}
 
 	outputLayerInput := new(mat.Dense)
-	outputLayerInput.Mul(nonLinearActivations, nn.outputWeights)
+	outputLayerInput.Mul(activations[len(activations)-1], nn.outputWeights)
 	outputLayerInput.Apply(func(i, j int, v float64) float64 { return v + nn.outputBias.At(0, j) }, outputLayerInput)
 	output.Apply(applySigmoid, outputLayerInput)
-	return nonLinearActivations
+	return activations
 }
 
 func (nn *NeuralNet) adjustWeights(originalWeights, activations, derivative *mat.Dense) {

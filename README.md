@@ -19,10 +19,10 @@ This command will train and test the network, and then print the accuracy of the
 The training and test data comes from the apparently oft-referenced [iris dataset](https://archive.ics.uci.edu/ml/datasets/iris).
 
 There's some potential directions it might be fun to take this repo:
-- [ ] Support multiple hidden layers
+- [x] Support multiple hidden layers
 - [ ] Print the amount of weights your model configuration will generate
 - [ ] Add a diagram to the README that explains how the system works
-- [ ] Add unit tests
+- [x] Add unit tests
 - [ ] Support other activation functions other than sigmoid
 - [ ] Make it much more memory efficient
 - [ ] Use the system's GPU for the matrix calculations
