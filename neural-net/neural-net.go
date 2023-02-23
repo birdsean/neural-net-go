@@ -65,22 +65,24 @@ func (nn *NeuralNet) backpropagate(inputVars, desiredOutputs, output *mat.Dense)
 		// backpropogate
 		networkError := new(mat.Dense)
 		networkError.Sub(desiredOutputs, output)
-		derivativeOutput := calcDerivatives(output, networkError)
 
 		errorAtHiddenLayer := new(mat.Dense)
-		errorAtHiddenLayer.Mul(derivativeOutput, nn.outputWeights.T())
-		derivativeHiddenLayer := calcDerivatives(hiddenLayerActivations, errorAtHiddenLayer)
+		previousWeights := nn.outputWeights.T()
+		previousDerivatives := calcDerivatives(output, networkError)
+		for j := len(nn.hiddenWeights) - 1; j >= 0; j-- {
+			errorAtHiddenLayer.Mul(previousDerivatives, previousWeights)
+			nn.adjustWeights(nn.outputWeights, hiddenLayerActivations[0], previousDerivatives)
+			nn.adjustBias(nn.outputBias, previousDerivatives)
+			previousDerivatives = calcDerivatives(hiddenLayerActivations[0], errorAtHiddenLayer)
+			errorAtHiddenLayer.Reset()
+		}
 
-		// adjust weights
-		nn.adjustWeights(nn.outputWeights, hiddenLayerActivations, derivativeOutput)
-		nn.adjustBias(nn.outputBias, derivativeOutput)
-
-		nn.adjustWeights(nn.hiddenWeights[0], inputVars, derivativeHiddenLayer)
-		nn.adjustBias(nn.hiddenBias[0], derivativeHiddenLayer)
+		nn.adjustWeights(nn.hiddenWeights[0], inputVars, previousDerivatives)
+		nn.adjustBias(nn.hiddenBias[0], previousDerivatives)
 	}
 }
 
-func (nn *NeuralNet) feedForward(inputVars, output *mat.Dense) *mat.Dense {
+func (nn *NeuralNet) feedForward(inputVars, output *mat.Dense) []*mat.Dense {
 	applySigmoid := func(_, _ int, v float64) float64 { return sigmoid(v) }
 	summingJunction := new(mat.Dense)
 	previousActivations := inputVars
@@ -101,7 +103,7 @@ func (nn *NeuralNet) feedForward(inputVars, output *mat.Dense) *mat.Dense {
 	outputLayerInput.Mul(activations[len(activations)-1], nn.outputWeights)
 	outputLayerInput.Apply(func(i, j int, v float64) float64 { return v + nn.outputBias.At(0, j) }, outputLayerInput)
 	output.Apply(applySigmoid, outputLayerInput)
-	return activations[0]
+	return activations
 }
 
 func (nn *NeuralNet) adjustWeights(originalWeights, activations, derivative *mat.Dense) {
