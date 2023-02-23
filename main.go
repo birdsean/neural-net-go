@@ -70,7 +70,7 @@ func main() {
 	config := neuralnet.NeuralNetConfig{
 		CountInputNeurons:  4,
 		CountOutputNeurons: 3,
-		CountHiddenNeurons: 10,
+		HiddenLayers:       []int{10},
 		CountEpochs:        5000,
 		LearningRate:       0.3,
 	}

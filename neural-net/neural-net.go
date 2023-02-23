@@ -17,7 +17,7 @@ type NeuralNet struct {
 type NeuralNetConfig struct {
 	CountInputNeurons  int
 	CountOutputNeurons int
-	CountHiddenNeurons int // TODO: change this to layer sizes config object to support multiple layers
+	HiddenLayers       []int
 	CountEpochs        int
 	LearningRate       float64
 }
@@ -27,10 +27,10 @@ func New(config NeuralNetConfig) *NeuralNet {
 }
 
 func (nn *NeuralNet) Train(inputVars, desiredOutputs *mat.Dense) {
-	nn.hiddenWeights = mat.NewDense(nn.config.CountInputNeurons, nn.config.CountHiddenNeurons, nil)
-	nn.hiddenBias = mat.NewDense(1, nn.config.CountHiddenNeurons, nil)
+	nn.hiddenWeights = mat.NewDense(nn.config.CountInputNeurons, nn.config.HiddenLayers[0], nil)
+	nn.hiddenBias = mat.NewDense(1, nn.config.HiddenLayers[0], nil)
 	// any other weight-layer matrices need to have rows equal to cols of previous matrix and rows equal to cols of next matrix
-	nn.outputWeights = mat.NewDense(nn.config.CountHiddenNeurons, nn.config.CountOutputNeurons, nil)
+	nn.outputWeights = mat.NewDense(nn.config.HiddenLayers[0], nn.config.CountOutputNeurons, nil)
 	nn.outputBias = mat.NewDense(1, nn.config.CountOutputNeurons, nil)
 
 	randPopulateMatrices(nn.hiddenWeights, nn.hiddenBias, nn.outputWeights, nn.outputBias)
