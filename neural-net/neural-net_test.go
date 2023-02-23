@@ -12,12 +12,12 @@ func basicNN() NeuralNet {
 		config: NeuralNetConfig{
 			CountInputNeurons:  2,
 			CountOutputNeurons: 2,
-			CountHiddenNeurons: 2,
+			HiddenLayers:       []int{2},
 			CountEpochs:        1,
 			LearningRate:       1,
 		},
-		hiddenWeights: mat.NewDense(2, 2, []float64{1, 1, 1, 1}),
-		hiddenBias:    mat.NewDense(1, 2, []float64{1, 1}),
+		hiddenWeights: []*mat.Dense{mat.NewDense(2, 2, []float64{1, 1, 1, 1})},
+		hiddenBias:    []*mat.Dense{mat.NewDense(1, 2, []float64{1, 1})},
 		outputWeights: mat.NewDense(2, 2, []float64{1, 1, 1, 1}),
 		outputBias:    mat.NewDense(1, 2, []float64{1, 1}),
 	}
