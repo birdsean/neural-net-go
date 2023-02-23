@@ -71,9 +71,9 @@ func (nn *NeuralNet) backpropagate(inputVars, desiredOutputs, output *mat.Dense)
 		previousDerivatives := calcDerivatives(output, networkError)
 		for j := len(nn.hiddenWeights) - 1; j >= 0; j-- {
 			errorAtHiddenLayer.Mul(previousDerivatives, previousWeights)
-			nn.adjustWeights(nn.outputWeights, hiddenLayerActivations[0], previousDerivatives)
+			nn.adjustWeights(nn.outputWeights, hiddenLayerActivations[j], previousDerivatives)
 			nn.adjustBias(nn.outputBias, previousDerivatives)
-			previousDerivatives = calcDerivatives(hiddenLayerActivations[0], errorAtHiddenLayer)
+			previousDerivatives = calcDerivatives(hiddenLayerActivations[j], errorAtHiddenLayer)
 			errorAtHiddenLayer.Reset()
 		}
 
