@@ -20,7 +20,7 @@ The training and test data comes from the apparently oft-referenced [iris datase
 
 There's some potential directions it might be fun to take this repo:
 - [x] Support multiple hidden layers
-- [ ] Print the amount of weights your model configuration will generate
+- [x] Print the amount of weights your model configuration will generate
 - [ ] Add a diagram to the README that explains how the system works
 - [x] Add unit tests
 - [ ] Support other activation functions other than sigmoid

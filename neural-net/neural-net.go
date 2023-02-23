@@ -2,6 +2,7 @@ package neuralnet
 
 import (
 	"errors"
+	"fmt"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -23,6 +24,14 @@ type NeuralNetConfig struct {
 }
 
 func New(config NeuralNetConfig) *NeuralNet {
+	countEdges := 0
+	prevNodes := config.CountInputNeurons
+	for _, nodeCount := range config.HiddenLayers {
+		countEdges += prevNodes * nodeCount
+		prevNodes = nodeCount
+	}
+	countEdges += config.CountOutputNeurons * prevNodes
+	fmt.Printf("Initializing Neural Net with %d edges and %d epochs\n", countEdges, config.CountEpochs)
 	return &NeuralNet{config: config}
 }
 
